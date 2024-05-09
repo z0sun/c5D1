@@ -1,8 +1,17 @@
 pipeline {
     agent any
 
+    environment {
+        HOME = '.'
+    }
+
+    tools {
+        // Ensure NodeJS is installed via Jenkins' tool configuration
+        nodejs 'NodeJS'
+    }
+
     stages {
-        stage('Install') {
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
@@ -12,14 +21,17 @@ pipeline {
                 sh 'npm run build'
             }
         }
-        stage('Test') {
+        stage('Initialize EB Application') {
             steps {
-                sh 'npm test'
+                // Initialize Elastic Beanstalk application
+                sh 'eb init -p node.js weatherapp --region us-east-1'
             }
         }
-        stage('Deploy') {
+        stage('Deploy to AWS Elastic Beanstalk') {
             steps {
-                // Add your deployment commands here
+                // Package and deploy the application
+                sh 'zip -r weatherapp.zip build'
+                sh 'eb deploy -l $BUILD_ID'
             }
         }
     }
